@@ -1,0 +1,36 @@
+{"abi": [
+        {
+            "type": "function",
+            "name": "increment",
+            "inputs": [],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        },
+        {
+            "type": "function",
+            "name": "number",
+            "inputs": [],
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ],
+            "stateMutability": "view"
+        },
+        {
+            "type": "function",
+            "name": "setNumber",
+            "inputs": [
+                {
+                    "name": "newNumber",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ],
+            "outputs": [],
+            "stateMutability": "nonpayable"
+        }
+    ],
+    "address" : "0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519"}

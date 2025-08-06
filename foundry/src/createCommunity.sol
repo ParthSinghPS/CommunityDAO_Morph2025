@@ -10,19 +10,22 @@ contract CreateCommunity is CommunityDAO {
         address creator;
         uint256 creationTime;
         uint256 id;
-        address[] members; // List of members in the community
-        address[] pollCreators; // List of poll creators in the community
-        Poll[] polls; // List of polls in the community
+        address[] members;
+        address[] pollCreators;
+        // ❌ Remove polls array from here
     }
 
     struct Poll {
         string question;
         string[] options;
-        mapping(uint256 => uint256) votes; // optionId => vote count
+        mapping(uint256 => uint256) votes; // mapping can't be used in memory
         address creator;
         uint256 creationTime;
         uint256 id;
     }
+
+    // Mapping to store polls separately
+    mapping(uint256 => Poll[]) public communityPolls;
 
     Community[] public communities;
     uint256 public communityCount = 1; // Start from 1 for easier indexing
@@ -68,29 +71,53 @@ contract CreateCommunity is CommunityDAO {
         string memory _name,
         string memory _description
     ) public nftMintedOnly returns (uint256) {
+        // Create empty arrays for members and pollCreators
+        address[] memory emptyMembersArray;
+        address[] memory emptyPollCreatorsArray;
+        
         Community memory newCommunity = Community({
             name: _name,
             description: _description,
             creator: msg.sender,
             creationTime: block.timestamp,
             id: communityCount,
-            members: new address[](0),
-            pollCreators: new address[](0),
-            polls: new Poll[](0)
+            members: emptyMembersArray, // ✅ Fixed: Use empty array
+            pollCreators: emptyPollCreatorsArray // ✅ Fixed: Use empty array
         });
 
         communities.push(newCommunity);
-        communityMembers[communityCount] = new address[](0);
-        emit CommunityCreated(communityCount, _name, _description, msg.sender);
+        // Initialize the community members mapping with empty array
+        communityMembers[communityCount] = emptyMembersArray;
 
+        emit CommunityCreated(communityCount, _name, _description, msg.sender);
         communityCount++;
-        emit CommunityCreated(
-            communityCount - 1,
-            _name,
-            _description,
-            msg.sender
-        );
         return communityCount - 1;
+    }
+
+    function addPoll(
+        uint256 communityId,
+        string memory _question,
+        string[] memory _options
+    ) public {
+        Poll storage newPoll = communityPolls[communityId].push();
+        newPoll.question = _question;
+        newPoll.options = _options;
+        newPoll.creator = msg.sender;
+        newPoll.creationTime = block.timestamp;
+        newPoll.id = communityPolls[communityId].length - 1;
+        
+        emit PollCreated(communityId, newPoll.id, _question, msg.sender);
+    }
+
+    function vote(
+        uint256 communityId,
+        uint256 pollId,
+        uint256 optionId
+    ) public {
+        Poll storage poll = communityPolls[communityId][pollId];
+        poll.votes[optionId] += 1;
+        
+        emit VoteCast(communityId, pollId, optionId, msg.sender);
     }
 
     function addMemberToCommunity(
@@ -123,5 +150,37 @@ contract CreateCommunity is CommunityDAO {
             }
         }
         return false;
+    }
+
+    // Additional helper functions
+    function getCommunityDetails(uint256 _communityId) 
+        public 
+        view 
+        returns (
+            string memory name,
+            string memory description,
+            address creator,
+            uint256 creationTime,
+            uint256 memberCount
+        ) 
+    {
+        require(_communityId < communities.length, "Community does not exist");
+        Community storage community = communities[_communityId];
+        
+        return (
+            community.name,
+            community.description,
+            community.creator,
+            community.creationTime,
+            community.members.length
+        );
+    }
+
+    function getPollVotes(uint256 _communityId, uint256 _pollId, uint256 _optionId)
+        public
+        view
+        returns (uint256)
+    {
+        return communityPolls[_communityId][_pollId].votes[_optionId];
     }
 }

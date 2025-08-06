@@ -8,11 +8,11 @@ contract CommunityDAO is ERC721 {
     uint256 private _tokenIds;
 
     struct Member {
-        address memberAddress;
-        uint256 contribution;
-        uint256 profileNftId; // ID of the profile NFT
-    }
-
+    address memberAddress;
+    uint256 contribution;
+    uint256 profileNftId; // ID of the profile NFT
+    uint256[] communities; // Add this field to track communities the member belongs to
+}
     uint256 public constant TOKENS_PER_ETH = 1000; // Example conversion rate
 
     mapping(address => Member) public members;
